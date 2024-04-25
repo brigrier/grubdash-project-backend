@@ -140,6 +140,52 @@ function read(req, res) {
     res.status(201).json({ data: dish });
 }
 
+//PUT
+//extra error checkers
+function idExists(req, res, next) {
+    const dishId = req.params.dishId;
+    const foundDish = dishes.find((dish) => dish.id === parseInt(dishId));
+    if (foundDish) {
+        res.locals.dish = foundDish;
+        next();
+    } else {
+        next({
+            status: 404,
+            message: `Dish does not exist: ${dishId}`
+        });
+    }
+}
+
+function idMatch(req, res, next) {
+    const dishId = req.params.dishId;
+    const { data: { id } = {} } = req.body;
+
+    if (parseInt(dishId) !== id) {
+        next({
+            status: 400,
+            message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`
+        });
+    } else {
+        next();
+    }
+}
+
+function update(req, res, next) {
+    const { data: { name, description, price, image_url } = {} } = req.body;
+    const dish = res.locals.dish;
+
+    if (name) dish.name = name;
+    if (description) dish.description = description;
+    if (price) dish.price = price;
+    if (image_url) dish.image_url = image_url;
+
+    res.json({ data: dish });
+}
+
+
+
+
+
 
 
 module.exports = {
@@ -158,5 +204,19 @@ module.exports = {
     read: [
         dishExists,
         read
+    ],
+    update: [
+        namePresent,
+        nameEmpty,
+        descriptionPresent,
+        descriptionEmpty,
+        pricePresent,
+        priceCheck,
+        imagePresent,
+        imageEmpty,
+        dishExists,
+        idExists,
+        idMatch,
+        update
     ],
 }
