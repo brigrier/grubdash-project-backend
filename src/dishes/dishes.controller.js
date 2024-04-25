@@ -120,6 +120,25 @@ function create(req, res){
     res.status(201).json({data: newDish})
 }
 
+//GET W ID 
+function dishExists(req, res, next) {
+    const dishId = req.params.dishId;
+    const foundDish = dishes.find((dish) => dish.id === parseInt(dishId));
+    if (foundDish) {
+        res.locals.dish = foundDish;
+        next();
+    } else {
+        next({
+            status: 404,
+            message: `Dish with ID ${dishId} does not exist`
+        });
+    }
+}
+
+function read(req, res) {
+    let dish = res.locals.dish;
+    res.status(201).json({ data: dish });
+}
 
 
 
@@ -135,5 +154,9 @@ module.exports = {
         imagePresent,
         imageEmpty,
         create
+    ],
+    read: [
+        dishExists,
+        read
     ],
 }
