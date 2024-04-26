@@ -145,16 +145,19 @@ function read(req, res, next){
 //validators
 function orderIdMatch(req, res, next) {
     const { orderId } = req.params;
+    const {data:{id} = {}} = req.body
     const match = orders.find((order) => order.id === orderId);
-    if (match) {
-        next();
-    } else {
+    if (id && orderId !== id) {
         next({
             status: 400,
-            message: `Order id does not match route id. Order: ${orderId}, Route: ${orderId}.`
+            message: `Order id does not match route id. Order:             ${orderId}, Route: ${orderId}.`
         });
+    } else {
+        next()
     }
 }
+
+
 function statusCheck(req, res, next){
     const {data:{status} = {}} = req.body
     if (!status || status === "") {
@@ -184,12 +187,39 @@ function update(req, res, next) {
     res.json({ data: order });
 }
 
+//DELETE
+function pendingStat(req, res, next){
+    const {data: {status} = {}} = req.body
+    if (status !== "pending") {
+        next({
+            status: 400,
+            message: "An order cannot be deleted unless it is pending"
+        })
+    } else {
+        next()
+    }
+}
 
+function destroy(req, res, next){
+    const orderId = req.params.orderId
+    const index = orders.findIndex((order) => order.id === orderId)
+    if (index > -1){
+        orders.splice(index, 1)
+        res.sendStatus(204)
+    } else {
+        next({status: 404})
+    }
+}
 
 
 
 module.exports = {
     list,
+    destroy: [
+        orderExists,
+        pendingStat,
+        destroy
+    ],
     create: [
         deliverToExists,
         deliverToEmpty,
@@ -206,6 +236,7 @@ module.exports = {
         read
     ],
     update: [
+        orderExists,
         deliverToExists,
         deliverToEmpty,
         mobileNumEmpty,

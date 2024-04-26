@@ -69,7 +69,7 @@ function pricePresent(req, res, next){
 }
 function priceCheck(req, res, next) {
     const { data: { price } = {} } = req.body;
-    if (isNaN(price) || price <= 0) {
+    if (typeof price !== "number" || price <= 0) {
         next({
             status: 400,
             message: "Dish must have a price that is a positive number"
@@ -155,7 +155,7 @@ function idMatch(req, res, next) {
     const dishId = req.params.dishId;
     const { data: { id } = {} } = req.body;
 
-    if (dishId !== id) {
+    if (id && dishId !== id) {
         next({
             status: 400,
             message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`
@@ -183,6 +183,7 @@ function update(req, res, next) {
 function destroy(req, res, next) {
     const dishId = req.params.dishId;
     const index = dishes.findIndex((dish) => dish.id === dishId);
+    console.log(typeof dishes[0].id, typeof dishId)
     if (index > -1) {
         dishes.splice(index, 1);
         res.sendStatus(204);
@@ -199,7 +200,6 @@ function destroy(req, res, next) {
 
 module.exports = {
     list,
-    destroy,
     create: [
         namePresent,
         nameEmpty,
@@ -216,6 +216,7 @@ module.exports = {
         read
     ],
     update: [
+        dishExists,
         namePresent,
         nameEmpty,
         descriptionPresent,
@@ -224,7 +225,6 @@ module.exports = {
         priceCheck,
         imagePresent,
         imageEmpty,
-        dishExists,
         idExists,
         idMatch,
         update
