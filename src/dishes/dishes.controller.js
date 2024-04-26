@@ -1,11 +1,9 @@
 const path = require("path");
-
-
 // Use the existing dishes data
 const dishes = require(path.resolve("src/data/dishes-data"));
-
 // Use this function to assign ID's when necessary
 const nextId = require("../utils/nextId");
+
 
 //GET
 function list(req, res){
@@ -102,7 +100,6 @@ function imageEmpty(req, res, next){
         next();
     }
 }
-
 // post func
 function create(req, res){
     const {data:{name, description, price, image_url} = {}} = req.body
@@ -120,7 +117,7 @@ function create(req, res){
 //GET W ID 
 function dishExists(req, res, next) {
     const dishId = req.params.dishId;
-    const foundDish = dishes.find((dish) => dish.id === parseInt(dishId));
+    const foundDish = dishes.find((dish) => dish.id === dishId);
     if (foundDish) {
         res.locals.dish = foundDish;
         next();
@@ -132,9 +129,10 @@ function dishExists(req, res, next) {
     }
 }
 
+
 function read(req, res) {
     let dish = res.locals.dish;
-    res.status(201).json({ data: dish });
+    res.status(200).json({ data: dish });
 }
 
 //PUT
