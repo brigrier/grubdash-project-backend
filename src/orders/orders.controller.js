@@ -141,6 +141,50 @@ function read(req, res, next){
     res.status(200).json({data:order})
 }
 
+//PUT 
+//validators
+function orderIdMatch(req, res, next) {
+    const { orderId } = req.params;
+    const match = orders.find((order) => order.id === orderId);
+    if (match) {
+        next();
+    } else {
+        next({
+            status: 400,
+            message: `Order id does not match route id. Order: ${orderId}, Route: ${orderId}.`
+        });
+    }
+}
+function statusCheck(req, res, next){
+    const {data:{status} = {}} = req.body
+    if (!status || status === "") {
+        next({
+            status: 400,
+            message: "Order must have a status of pending, preparing, out-for-delivery, delivered"
+        })
+    } else if (status === "delivered") {
+        next({
+            status: 400,
+            message: "A delivered order cannot be changed"
+        })
+    } else {
+        next()
+    }
+}
+//put function
+function update(req, res, next) {
+    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+    const order = res.locals.order;
+
+    if (deliverTo) order.deliverTo = deliverTo;
+    if (mobileNumber) order.mobileNumber = mobileNumber;
+    if (status) order.status = status;
+    if (dishes) order.dishes = dishes;
+
+    res.json({ data: order });
+}
+
+
 
 
 
@@ -160,5 +204,18 @@ module.exports = {
     read: [
         orderExists,
         read
+    ],
+    update: [
+        deliverToExists,
+        deliverToEmpty,
+        mobileNumEmpty,
+        mobileNumExists,
+        dishesExists,
+        dishesIsArray,
+        dishesArrayEmpty,
+        dishQuantity,
+        orderIdMatch,
+        statusCheck,
+        update
     ],
 };
