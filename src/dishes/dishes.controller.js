@@ -179,7 +179,18 @@ function update(req, res, next) {
     res.json({ data: dish });
 }
 
-
+//DELETE
+function destroy(req, res, next){
+    const { dishId } = req.params.dish
+    const index = dishes.findIndex((dish) => dish.id === dishId)
+    if (index > -1){
+        dishes.splice(index, 1)
+    } else {
+        next({
+            status: 405
+        })
+    }
+}
 
 
 
@@ -187,6 +198,7 @@ function update(req, res, next) {
 
 module.exports = {
     list,
+    destroy,
     create: [
         namePresent,
         nameEmpty,
