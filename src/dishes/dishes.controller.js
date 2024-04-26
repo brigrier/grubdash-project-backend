@@ -67,15 +67,15 @@ function pricePresent(req, res, next){
         next()
     }
 }
-function priceCheck(req, res, next){
-    const {data:{price} = {}} = req.body
-    if(isNaN(price) || price <= 0){
+function priceCheck(req, res, next) {
+    const { data: { price } = {} } = req.body;
+    if (isNaN(price) || price <= 0) {
         next({
             status: 400,
-            message: "Dish must have a price that is an integer greater than 0"
-        })
+            message: "Dish must have a price that is a positive number"
+        });
     } else {
-        next()
+        next();
     }
 }
 function imagePresent(req, res, next){
@@ -139,7 +139,7 @@ function read(req, res) {
 //extra error checkers
 function idExists(req, res, next) {
     const dishId = req.params.dishId;
-    const foundDish = dishes.find((dish) => dish.id === parseInt(dishId));
+    const foundDish = dishes.find((dish) => dish.id === dishId);
     if (foundDish) {
         res.locals.dish = foundDish;
         next();
@@ -155,7 +155,7 @@ function idMatch(req, res, next) {
     const dishId = req.params.dishId;
     const { data: { id } = {} } = req.body;
 
-    if (parseInt(dishId) !== id) {
+    if (dishId !== id) {
         next({
             status: 400,
             message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`
@@ -177,16 +177,19 @@ function update(req, res, next) {
     res.json({ data: dish });
 }
 
+
+
 //DELETE
-function destroy(req, res, next){
-    const { dishId } = req.params.dish
-    const index = dishes.findIndex((dish) => dish.id === dishId)
-    if (index > -1){
-        dishes.splice(index, 1)
+function destroy(req, res, next) {
+    const dishId = req.params.dishId;
+    const index = dishes.findIndex((dish) => dish.id === dishId);
+    if (index > -1) {
+        dishes.splice(index, 1);
+        res.sendStatus(204);
     } else {
         next({
             status: 405
-        })
+        });
     }
 }
 
