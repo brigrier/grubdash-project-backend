@@ -3,129 +3,126 @@ const path = require("path");
 // Use the existing order data
 const orders = require(path.resolve("src/data/orders-data"));
 
-// Use this function to assigh ID's when necessary
+// Use this function to assign IDs when necessary
 const nextId = require("../utils/nextId");
-const { create } = require("domain");
 
 //GET 
-function list(req, res){
-    res.json({data:orders})
+function list(req, res) {
+    res.json({ data: orders });
 }
 
 //POST
-function deliverToExists(req, res, next){
-    const {data:{deliverTo} ={}} = req.body
-    if (!deliverTo){
+function deliverToExists(req, res, next) {
+    const { data: { deliverTo } = {} } = req.body;
+    if (!deliverTo) {
         next({
             status: 400,
             message: 'Order must include a deliverTo'
-        })
+        });
     } else {
-        next()
+        next();
     }
 }
-function deliverToEmpty(req, res, next){
-    const {data:{deliverTo} ={}} = req.body
-    if (deliverTo = ''){
+
+function deliverToEmpty(req, res, next) {
+    const { data: { deliverTo } = {} } = req.body;
+    if (deliverTo === '') { 
         next({
             status: 400,
             message: 'Order must include a deliverTo'
-        })
+        });
     } else {
-        next()
+        next();
     }
 }
-function mobileNumExists(req, res, next){
-    const {data:{mobileNumber} ={}} = req.body
-    if (!mobileNumber){
+
+function mobileNumExists(req, res, next) {
+    const { data: { mobileNumber } = {} } = req.body;
+    if (!mobileNumber) {
         next({
             status: 400,
             message: 'Order must include a mobileNumber'
-        })
+        });
     } else {
-        next()
+        next();
     }
 }
-function mobileNumEmpty(req, res, next){
-    const {data:{mobileNumber} ={}} = req.body
-    if (mobileNumber === ''){
+
+function mobileNumEmpty(req, res, next) {
+    const { data: { mobileNumber } = {} } = req.body;
+    if (mobileNumber === '') { 
         next({
             status: 400,
             message: 'Order must include a mobileNumber'
-        })
+        });
     } else {
-        next()
+        next();
     }
 }
-function dishesExists(req, res, next){
-    const {data:{dishes} ={}} = req.body
-    if (!dishes){
+
+function dishesExists(req, res, next) {
+    const { data: { dishes } = {} } = req.body;
+    if (!dishes) {
         next({
             status: 400,
             message: 'Order must include a dish'
-        })
+        });
     } else {
-        next()
+        next();
     }
 }
-function dishesIsArray(req, res, next){
-    const {data:{dishes} ={}} = req.body
-    if (!Array.isArray(dishes)){
+
+function dishesIsArray(req, res, next) {
+    const { data: { dishes } = {} } = req.body;
+    if (!Array.isArray(dishes)) {
         next({
             status: 400,
             message: 'Order must include at least one dish'
-        })
+        });
     } else {
-        next()
+        next();
     }
 }
-function dishesArrayEmpty(req, res, next){
-    const {data:{dishes} ={}} = req.body
-    if (dishes.length === 0){
+
+function dishesArrayEmpty(req, res, next) {
+    const { data: { dishes } = {} } = req.body;
+    if (dishes.length === 0) {
         next({
             status: 400,
             message: 'Order must include at least one dish'
-        })
+        });
     } else {
-        next()
-    }
-}
-function dishQuantity(req, res, next){
-    const {data:{dishes} ={}} = req.body
-    if (dishes.quantity = ""){
-        next({
-            status: 400,
-            message: `dish ${index} must have a quantity that is an integer greater than 0`
-        })
-    } else {
-        next()
-    }
-}
-function dishQuantityProp(req, res, next){
-    const {data:{dishes} ={}} = req.body
-    if (dishes.quantity <= 0){
-        next({
-            status: 400,
-            message: `dish ${index} must have a quantity that is an integer greater than 0`
-        })
-    } else {
-        next()
-    }
-}
-function dishQuantityNum(req, res, next){
-    const {data:{dishes} ={}} = req.body
-    if (!Number(dishes.quantity)){
-        next({
-            status: 400,
-            message: `dish ${index} must have a quantity that is an integer greater than 0`
-        })
-    } else {
-        next()
+        next();
     }
 }
 
+function dishQuantity(req, res, next) {
+    const { data: { dishes } = {} } = req.body;
+    
+    for (let index = 0; index < dishes.length; index++) {
+        if (!dishes[index].quantity || !Number.isInteger(dishes[index].quantity) || dishes[index].quantity <= 0) {
+            next({
+                status: 400,
+                message: `dish ${index} must have a quantity that is an integer greater than 0`
+            });
+            return; 
+        }
+    }
+    next();
+}
 
-
+function create(req, res, next) {
+    const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+    const newOrder = {
+        id: nextId(), 
+        deliverTo: deliverTo,
+        mobileNumber: mobileNumber,
+        status: status,
+        dishes: dishes,
+    };
+    orders.push(newOrder);
+    res.status(201).json({ data: newOrder });
+}
 
 module.exports = {
     list,
@@ -137,9 +134,7 @@ module.exports = {
         dishesExists,
         dishesIsArray,
         dishesArrayEmpty,
-        dishQuantityProp,
-        dishQuantityNum,
-        dishQuantity
+        dishQuantity,
+        create
     ],
-
-}
+};
