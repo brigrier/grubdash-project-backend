@@ -71,7 +71,7 @@ function pricePresent(req, res, next){
 }
 function priceCheck(req, res, next){
     const {data:{price} = {}} = req.body
-    if(price !== Number() || price <= 0){
+    if(isNaN(price) || price <= 0){
         next({
             status: 400,
             message: "Dish must have a price that is an integer greater than 0"
@@ -91,7 +91,6 @@ function imagePresent(req, res, next){
         next();
     }
 }
-
 function imageEmpty(req, res, next){
     const { data: { image_url } = {} } = req.body;
     if (!image_url) {
@@ -105,12 +104,10 @@ function imageEmpty(req, res, next){
 }
 
 // post func
-let lastId = dishes.reduce((maxId, dish) => Math.max(maxId, dish.id), 0);
-
 function create(req, res){
     const {data:{name, description, price, image_url} = {}} = req.body
     const newDish = {
-      id: ++lastId,
+      id: nextId(),
       name: name,
       description: description,
       price: price,
