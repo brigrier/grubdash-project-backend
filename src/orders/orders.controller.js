@@ -123,6 +123,26 @@ function create(req, res, next) {
     orders.push(newOrder);
     res.status(201).json({ data: newOrder });
 }
+//GET W ID
+function orderExists(req, res, next){
+    const orderId = req.params.orderId
+    const foundOrder = orders.find((order)=> order.id === orderId)
+    if(foundOrder){
+        res.locals.order = foundOrder
+        next()
+    } else {
+        next({
+            status:404
+        })
+    }
+}
+function read(req, res, next){
+    const order = res.locals.order
+    res.status(200).json({data:order})
+}
+
+
+
 
 module.exports = {
     list,
@@ -136,5 +156,9 @@ module.exports = {
         dishesArrayEmpty,
         dishQuantity,
         create
+    ],
+    read: [
+        orderExists,
+        read
     ],
 };
