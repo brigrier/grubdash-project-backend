@@ -2,6 +2,7 @@ const path = require("path");
 
 // Use the existing order data
 const orders = require(path.resolve("src/data/orders-data"));
+const dishes = require("../data/dishes-data")
 
 // Use this function to assign IDs when necessary
 const nextId = require("../utils/nextId");
@@ -11,7 +12,7 @@ function list(req, res) {
     res.json({ data: orders });
 }
 
-//POST
+//POST 
 function deliverToExists(req, res, next) {
     const { data: { deliverTo } = {} } = req.body;
     if (!deliverTo) {
@@ -132,7 +133,9 @@ function orderExists(req, res, next){
         next()
     } else {
         next({
-            status:404
+            status:404,
+           
+            message: `OrderId ${orderId} doesnt exist`
         })
     }
 }
@@ -150,7 +153,7 @@ function orderIdMatch(req, res, next) {
     if (id && orderId !== id) {
         next({
             status: 400,
-            message: `Order id does not match route id. Order:             ${orderId}, Route: ${orderId}.`
+            message: `Order id does not match route id. Order:             ${id}, Route: ${orderId}.`
         });
     } else {
         next()
@@ -160,18 +163,23 @@ function orderIdMatch(req, res, next) {
 
 function statusCheck(req, res, next){
     const {data:{status} = {}} = req.body
-    if (!status || status === "") {
+    if (!status) {
         next({
             status: 400,
             message: "Order must have a status of pending, preparing, out-for-delivery, delivered"
         })
-    } else if (status === "delivered") {
+    } else if (status === "") {
+        next({
+            status: 400,
+            message: "Order must have a status of pending, preparing, out-for-delivery, delivered"
+        })
+    } else if (!status === "pending") {
         next({
             status: 400,
             message: "A delivered order cannot be changed"
         })
     } else {
-        next()
+      next()
     }
 }
 //put function
@@ -181,7 +189,9 @@ function update(req, res, next) {
 
     if (deliverTo) order.deliverTo = deliverTo;
     if (mobileNumber) order.mobileNumber = mobileNumber;
-    if (status) order.status = status;
+    if (status && !["pending", "preparing", "out-for-delivery", "delivered"].includes(status)){
+      return next({  status: 400, message: "status" }); }
+    
     if (dishes) order.dishes = dishes;
 
     res.json({ data: order });
@@ -189,37 +199,28 @@ function update(req, res, next) {
 
 //DELETE
 function pendingStat(req, res, next){
-    const {data: {status} = {}} = req.body
-    if (status !== "pending") {
+//     const {data: {status} = {}} = req.body
+    if (res.locals.order.status !== "pending") {
         next({
             status: 400,
             message: "An order cannot be deleted unless it is pending"
         })
-    } else {
-        next()
+    }  else {
+       next()
     }
 }
 
 function destroy(req, res, next){
-    const orderId = req.params.orderId
-    const index = orders.findIndex((order) => order.id === orderId)
-    if (index > -1){
-        orders.splice(index, 1)
-        res.sendStatus(204)
-    } else {
-        next({status: 404})
-    }
+    const {orderId} = req.params
+    const index = orders.findIndex((order) => Number(order.id) === Number(orderId))
+    const remove = orders.splice(index, 1)
+    res.status(204).json({data:remove})
 }
 
 
 
 module.exports = {
     list,
-    destroy: [
-        orderExists,
-        pendingStat,
-        destroy
-    ],
     create: [
         deliverToExists,
         deliverToEmpty,
@@ -237,6 +238,7 @@ module.exports = {
     ],
     update: [
         orderExists,
+        orderIdMatch,
         deliverToExists,
         deliverToEmpty,
         mobileNumEmpty,
@@ -245,8 +247,12 @@ module.exports = {
         dishesIsArray,
         dishesArrayEmpty,
         dishQuantity,
-        orderIdMatch,
         statusCheck,
         update
+    ],
+     destroy: [
+        orderExists,
+        pendingStat,
+        destroy
     ],
 };
